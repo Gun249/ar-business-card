@@ -3,10 +3,12 @@
 import { useState } from "react"
 import { api } from "../../lib/api.js"
 import LoadingSpinner from "../ui/LoadingSpinner.jsx"
+import axios from "axios"
+
 
 export default function RegisterPage({ onRegister, onNavigateToLogin }) {
   const [formData, setFormData] = useState({
-    name: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -17,8 +19,8 @@ export default function RegisterPage({ onRegister, onNavigateToLogin }) {
   const validateForm = () => {
     const newErrors = {}
 
-    if (!formData.name.trim()) {
-      newErrors.name = "กรุณากรอกชื่อ"
+    if (!formData.username.trim()) {
+      newErrors.username = "กรุณากรอก Username"
     }
 
     if (!formData.email.trim()) {
@@ -43,19 +45,41 @@ export default function RegisterPage({ onRegister, onNavigateToLogin }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    if (!validateForm()) return
-
+    setErrors({})
     setLoading(true)
+    const { username, email, password, confirmPassword } = formData
     try {
-      await onRegister(formData)
-    } catch (err) {
-      setErrors({ general: err.message })
-    } finally {
-      setLoading(false)
-    }
-  }
+      if(!validateForm()){
+        return
+      }
 
+      if (password !== confirmPassword) {
+        setErrors({ confirmPassword: "รหัสผ่านไม่ตรงกัน" })
+        return
+      } else {
+        const checkuser = await axios.get(`http://localhost:5000/users/checkuser/${email}`)
+        if (checkuser.data.exists === true) {
+          setErrors({ Email: "Email นี้มีผู้ใช้งานแล้ว" })
+          return
+        } else {
+          const response = await axios.post("http://localhost:5000/users/register",{username,email,password});
+          if (response.status === 201) {
+            console.log("User registered successfully")
+            onRegister({ email, name: username })
+          }
+          else {
+            setErrors({ general: "เกิดข้อผิดพลาดในการลงทะเบียน" })
+          }
+        }
+      }
+
+        } catch (error) {
+        setErrors({ general: "เกิดข้อผิดพลาดในการลงทะเบียน" })
+        } finally {
+          setLoading(false)
+        }
+      }
+    
   const handleGoogleRegister = async () => {
     setLoading(true)
     try {
@@ -85,22 +109,22 @@ export default function RegisterPage({ onRegister, onNavigateToLogin }) {
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
                 ชื่อ-นามสกุล
               </label>
               <input
-                id="name"
-                name="name"
+                id="username"
+                name="username"
                 type="text"
                 required
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                  errors.name ? "border-red-300" : "border-gray-300"
+                  errors.username ? "border-red-300" : "border-gray-300"
                 }`}
-                placeholder="กรอกชื่อ-นามสกุลของคุณ"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="กรอก Username ของคุณ"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               />
-              {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+              {errors.username && <p className="mt-1 text-sm text-red-600">{errors.username}</p>}
             </div>
 
             <div>
