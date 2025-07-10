@@ -4,9 +4,10 @@ import { useState } from "react"
 import { api } from "../../lib/api.js"
 import LoadingSpinner from "../ui/LoadingSpinner.jsx"
 import axios from "axios"
+import sweetalert from "sweetalert2"
 
 
-export default function RegisterPage({ onRegister, onNavigateToLogin }) {
+export default function RegisterPage({ onNavigateToLogin }) {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -48,43 +49,98 @@ export default function RegisterPage({ onRegister, onNavigateToLogin }) {
     setErrors({})
     setLoading(true)
     const { username, email, password, confirmPassword } = formData
+    
     try {
       if(!validateForm()){
         return
       }
 
       if (password !== confirmPassword) {
-        setErrors({ confirmPassword: "รหัสผ่านไม่ตรงกัน" })
+        sweetalert.fire({
+          title: "รหัสผ่านไม่ตรงกัน",
+          text: "กรุณากรอกรหัสผ่านให้ตรงกัน",
+          icon: "error",
+          confirmButtonText: "ตกลง"
+        })
         return
-      } else {
-        const checkuser = await axios.get(`http://localhost:5000/users/checkuser/${email}`)
-        if (checkuser.data.exists === true) {
-          setErrors({ Email: "Email นี้มีผู้ใช้งานแล้ว" })
-          return
-        } else {
-          const response = await axios.post("http://localhost:5000/users/register",{username,email,password});
-          if (response.status === 201) {
-            console.log("User registered successfully")
-            onRegister({ email, name: username })
-          }
-          else {
-            setErrors({ general: "เกิดข้อผิดพลาดในการลงทะเบียน" })
-          }
-        }
       }
 
-        } catch (error) {
-        setErrors({ general: "เกิดข้อผิดพลาดในการลงทะเบียน" })
-        } finally {
-          setLoading(false)
-        }
+      const response = await axios.post("http://localhost:5000/users/register", {
+        username, 
+        email, 
+        password
+      });
+
+      if (response.status === 201) {
+        sweetalert.fire({
+          title: "สมัครสมาชิกสำเร็จ",
+          text: "คุณสามารถเข้าสู่ระบบได้แล้ว",
+          icon: "success",
+          confirmButtonText: "ไปหน้าเข้าสู่ระบบ"
+        }).then(() => {
+          onNavigateToLogin()
+        })
       }
+
+    } catch (error) {
+      // จัดการ error response จาก server
+      if (error.response && error.response.status === 409) {
+        const errorMessage = error.response.data.error;
+        
+        if (errorMessage === 'ชื่อผู้ใช้นี้ถูกใช้งานแล้ว') {
+          sweetalert.fire({
+            title: "ชื่อผู้ใช้มีผู้ใช้งานแล้ว",
+            text: "ชื่อผู้ใช้นี้ถูกใช้งานแล้ว กรุณาใช้ชื่อผู้ใช้อื่น",
+            icon: "error",
+            confirmButtonText: "ตกลง"
+          })
+        } else if (errorMessage === 'อีเมลนี้ถูกใช้งานแล้ว') {
+          sweetalert.fire({
+            title: "อีเมลมีผู้ใช้งานแล้ว",
+            text: "อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่น",
+            icon: "error",
+            confirmButtonText: "ตกลง"
+          })
+        } else {
+          sweetalert.fire({
+            title: "ข้อมูลซ้ำ",
+            text: errorMessage,
+            icon: "error",
+            confirmButtonText: "ตกลง"
+          })
+        }
+      } else if (error.response && error.response.status === 400) {
+        sweetalert.fire({
+          title: "ข้อมูลไม่ครบถ้วน",
+          text: error.response.data.error || "กรุณากรอกข้อมูลให้ครบถ้วน",
+          icon: "error",
+          confirmButtonText: "ตกลง"
+        })
+      } else {
+        sweetalert.fire({
+          title: "เกิดข้อผิดพลาด",
+          text: "ไม่สามารถสมัครสมาชิกได้ กรุณาลองใหม่อีกครั้ง",
+          icon: "error",
+          confirmButtonText: "ตกลง"
+        })
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
     
   const handleGoogleRegister = async () => {
     setLoading(true)
     try {
       const user = await api.loginWithGoogle()
-      onRegister({ email: user.email, name: user.name })
+      sweetalert.fire({
+        title: "สมัครสมาชิกสำเร็จ",
+        text: "คุณสามารถเข้าสู่ระบบได้แล้ว",
+        icon: "success",
+        confirmButtonText: "ไปหน้าเข้าสู่ระบบ"
+      }).then(() => {
+        onNavigateToLogin()
+      })
     } catch (err) {
       setErrors({ general: err.message })
     } finally {
@@ -110,7 +166,7 @@ export default function RegisterPage({ onRegister, onNavigateToLogin }) {
           <div className="space-y-4">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                ชื่อ-นามสกุล
+                Username
               </label>
               <input
                 id="username"
@@ -129,7 +185,7 @@ export default function RegisterPage({ onRegister, onNavigateToLogin }) {
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                อีเมล
+                Email
               </label>
               <input
                 id="email"

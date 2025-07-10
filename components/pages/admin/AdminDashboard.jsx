@@ -52,7 +52,7 @@ export default function AdminDashboard({ user, onNavigate, onLogout }) {
               >
                 กลับสู่หน้าหลัก
               </button>
-              <span className="text-sm text-gray-600">สวัสดี, {user.name}</span>
+              <span className="text-sm text-gray-600">สวัสดี, {user.username}</span>
               <button onClick={onLogout} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">
                 ออกจากระบบ
               </button>

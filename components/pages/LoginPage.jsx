@@ -3,10 +3,13 @@
 import { useState } from "react"
 import { api } from "../../lib/api.js"
 import LoadingSpinner from "../ui/LoadingSpinner.jsx"
+import sweetalert from "sweetalert2"
+import axios from "axios"
 
-export default function LoginPage({ onLogin, onNavigateToRegister }) {
+
+export default function LoginPage({ onNavigateToRegister, onNavigateToDashboard }) {
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: "",
   })
   const [loading, setLoading] = useState(false)
@@ -16,16 +19,43 @@ export default function LoginPage({ onLogin, onNavigateToRegister }) {
     e.preventDefault()
     setError("")
 
-    if (!formData.email.trim() || !formData.password.trim()) {
+    if (!formData.username.trim() || !formData.password.trim()) {
       setError("กรุณากรอกอีเมลและรหัสผ่าน")
       return
     } 
-    setLoading(true)
-    try {
-      const user = await api.login(formData)
-      onLogin({ email: user.email })
+    const { username, password } = formData
+    try{
+      const response = await axios.post(`http://localhost:5000/users/login`, {
+        username, 
+        password
+      })
+      if (!response.data) {
+        setError("ไม่พบผู้ใช้ กรุณาลงทะเบียนก่อนเข้าสู่ระบบ")
+        return
+      } else if (response.data.error ==='รหัสผ่านไม่ถูกต้อง') {
+        sweetalert.fire({
+          title: "เข้าสู่ระบบล้มเหลว",
+          text: "รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง",
+          icon: "error",
+          confirmButtonText: "ตกลง"
+        })
+        return
+      } else if (response.data){
+        sweetalert.fire({
+          title: "เข้าสู่ระบบสำเร็จ",
+          text: "ยินดีต้อนรับเข้าสู่ระบบ",
+          icon: "success",
+          confirmButtonText: "ตกลง"
+        }).then(() => {
+          onNavigateToDashboard(response.data.user || response.data)
+        })
+        return
+      }
+      setLoading(true)
+
     } catch (err) {
-      setError(err.message)
+      console.error("Login error:", err)
+      setError("เกิดข้อผิดพลาดในการเข้าสู่ระบบ กรุณาลองใหม่อีกครั้ง")
     } finally {
       setLoading(false)
     }
@@ -35,7 +65,15 @@ export default function LoginPage({ onLogin, onNavigateToRegister }) {
     setLoading(true)
     try {
       const user = await api.loginWithGoogle()
-      onLogin({ email: user.email })
+      sweetalert.fire({
+        title: "เข้าสู่ระบบสำเร็จ",
+        text: "ยินดีต้อนรับกลับมา",
+        icon: "success",
+        confirmButtonText: "ตกลง"
+      }).then(() => {
+        localStorage.setItem('user', JSON.stringify(user))
+        onNavigateToDashboard()
+      })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -58,18 +96,18 @@ export default function LoginPage({ onLogin, onNavigateToRegister }) {
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                อีเมล
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                Username
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
+                id="username"
+                name="username"
+                type="username"
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="กรอกอีเมลของคุณ"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="กรอกชื่อผู้ใช้ของคุณ"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               />
             </div>
 

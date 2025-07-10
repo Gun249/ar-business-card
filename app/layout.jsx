@@ -2,8 +2,7 @@ import "./globals.css"
 
 export const metadata = {
   title: "AR Business Card",
-  description: "สร้างและจัดการนามบัตร AR ของคุณ",
-    generator: 'v0.dev'
+  description: "สร้างและจัดการนามบัตร AR ของคุณ"
 }
 
 export default function RootLayout({ children }) {
