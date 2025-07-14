@@ -1,7 +1,13 @@
+ignoredBuiltDependencies:
+  - canvas
+  - core-js
+
 onlyBuiltDependencies:
   - '@prisma/client'
   - '@prisma/engines'
   - bcrypt
+  - canvas
+  - core-js
   - esbuild
   - prisma
   - sharp
