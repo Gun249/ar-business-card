@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { api } from "../../lib/api.js"
 import LoadingSpinner from "../ui/LoadingSpinner.jsx"
 
 export default function CardEditorPage({ user, templateId, cardId, onNavigate, showToast }) {

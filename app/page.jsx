@@ -12,21 +12,18 @@ const ARCardViewer = dynamic(
 );
 
 // Main App Component
-// Main App Component
 export default function HomePage() {
-  // แก้ไขค่าเริ่มต้นตรงนี้ เพื่อให้เริ่มที่หน้า ar-viewer
+  // เริ่มต้นที่หน้าสแกน AR ทันที
   const [currentPage, setCurrentPage] = useState("ar-viewer")
   const [user, setUser] = useState(null)
 
-  // เช็คข้อมูลผู้ใช้จาก localStorage ตอน load หน้า
+  // เช็คข้อมูลผู้ใช้จาก localStorage แต่ไม่เปลี่ยนหน้าอัตโนมัติ
   useEffect(() => {
-    // โค้ดส่วนนี้จะยังไม่ทำงานเพราะเราเริ่มที่หน้า ar-viewer แต่ไม่เป็นไร
-    const savedUser = localStorage.getItem('ar-viewer')
+    const savedUser = localStorage.getItem('user')
     if (savedUser) {
       try {
         const userData = JSON.parse(savedUser)
         setUser(userData)
-        setCurrentPage("dashboard")
         console.log('Loaded user from localStorage:', userData)
       } catch (error) {
         console.error('Error parsing user data:', error)
