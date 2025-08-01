@@ -1,4 +1,8 @@
-export default function StatsIcon({ className = "w-6 h-6" }) {
+interface StatsIconProps {
+  className?: string;
+}
+
+export default function StatsIcon({ className = "w-6 h-6" }: StatsIconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path

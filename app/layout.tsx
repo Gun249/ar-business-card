@@ -1,12 +1,17 @@
 import "./globals.css"
 import Script from 'next/script';
+import { ReactNode } from 'react';
 
 export const metadata = {
   title: "AR Business Card",
   description: "สร้างและจัดการนามบัตร AR ของคุณ"
 }
 
-export default function RootLayout({ children }) {
+interface RootLayoutProps {
+  children: ReactNode;
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="th">
       <head>

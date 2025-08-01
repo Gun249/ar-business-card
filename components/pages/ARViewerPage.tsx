@@ -12,18 +12,41 @@ import CheckIcon from '../icons/CheckIcon';
  * A default mock data object for a personal business card is used.
  */
 
-let arScriptsLoaded = false;
+// Types for A-Frame elements
+interface AFrameScene extends Element {
+  hasLoaded?: boolean;
+  systems?: {
+    'mindar-image'?: {
+      running?: boolean;
+      stop?: () => void;
+    };
+  };
+}
 
-const ARViewerPage = ({ cardData: initialCardData }) => {
-  const [status, setStatus] = useState(arScriptsLoaded ? 'ready' : 'loading');
-  const [errorMessage, setErrorMessage] = useState('');
-  const containerRef = useRef(null);
+// Types
+interface CardData {
+  username: string;
+  title: string;
+  profilePicture: string;
+  phone: string;
+  email: string;
+}
+
+interface ARViewerPageProps {
+  cardData?: CardData;
+}
+
+type ARStatus = 'loading' | 'ready' | 'error';
+
+let arScriptsLoaded: boolean = false;
+
+const ARViewerPage: React.FC<ARViewerPageProps> = ({ cardData: initialCardData }) => {
+  const [status, setStatus] = useState<ARStatus>(arScriptsLoaded ? 'ready' : 'loading');
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // ข้อมูลจำลองสำหรับนามบัตรส่วนตัว
-  const defaultMockData = {
-    // AR-specific assets from a working example
-    mindTargetSrc: "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.mind",
-    
+  const defaultMockData: CardData = {
     // User-facing content for the business card
     username: "Gunnapat",
     title: "Full-Stack Developer",
@@ -41,25 +64,26 @@ const ARViewerPage = ({ cardData: initialCardData }) => {
       return;
     }
 
-    const loadScript = (src, id) => {
+    const loadScript = (src: string, id: string): Promise<void> => {
       return new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.id = id;
         script.src = src;
-        script.onload = resolve;
+        script.onload = () => resolve();
         script.onerror = () => reject(new Error(`ไม่สามารถโหลดสคริปต์ได้จาก: ${src}`));
         document.body.appendChild(script);
       });
     };
 
-    const initializeAR = async () => {
+    const initializeAR = async (): Promise<void> => {
       try {
         await loadScript("https://aframe.io/releases/1.6.0/aframe.min.js", "aframe-script");
         await loadScript("https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js", "mindar-script");
         arScriptsLoaded = true;
         setStatus('ready');
       } catch (error) {
-        setErrorMessage(error.message);
+        const errorMsg = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ';
+        setErrorMessage(errorMsg);
         setStatus('error');
       }
     };
@@ -117,18 +141,18 @@ const ARViewerPage = ({ cardData: initialCardData }) => {
     `;
 
     container.innerHTML = sceneHTML;
-    const sceneEl = container.querySelector('a-scene');
+    const sceneEl = container.querySelector('a-scene') as AFrameScene | null;
 
-    const onReady = () => {
+    const onReady = (): void => {
         toast("AR พร้อมใช้งานแล้ว! กรุณาเล็งกล้องไปที่ Marker", {
             icon: <CheckIcon />,
             duration: 5000,
         });
     };
 
-    if (sceneEl.hasLoaded) {
+    if (sceneEl?.hasLoaded) {
       onReady();
-    } else {
+    } else if (sceneEl) {
       sceneEl.addEventListener('loaded', onReady, { once: true });
     }
 
@@ -138,12 +162,12 @@ const ARViewerPage = ({ cardData: initialCardData }) => {
       if (styleTag) {
         styleTag.remove();
       }
-      const currentSceneEl = containerRef.current?.querySelector('a-scene');
+      const currentSceneEl = containerRef.current?.querySelector('a-scene') as AFrameScene | null;
       if (currentSceneEl) {
         currentSceneEl.removeEventListener('loaded', onReady);
-        const mindarSystem = currentSceneEl.systems['mindar-image'];
+        const mindarSystem = currentSceneEl.systems?.['mindar-image'];
         if (mindarSystem?.running) {
-          mindarSystem.stop();
+          mindarSystem.stop?.();
         }
         currentSceneEl.remove();
       }

@@ -1,4 +1,8 @@
-export default function CameraIcon({ className = "w-6 h-6" }) {
+interface CameraIconProps {
+  className?: string;
+}
+
+export default function CameraIcon({ className = "w-6 h-6" }: CameraIconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path

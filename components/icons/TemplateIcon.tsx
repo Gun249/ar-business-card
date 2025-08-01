@@ -1,4 +1,8 @@
-export default function TemplateIcon({ className = "w-6 h-6" }) {
+interface TemplateIconProps {
+  className?: string;
+}
+
+export default function TemplateIcon({ className = "w-6 h-6" }: TemplateIconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path

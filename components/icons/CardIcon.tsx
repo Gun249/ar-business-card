@@ -1,4 +1,8 @@
-export default function CardIcon({ className = "w-6 h-6" }) {
+interface CardIconProps {
+  className?: string;
+}
+
+export default function CardIcon({ className = "w-6 h-6" }: CardIconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
