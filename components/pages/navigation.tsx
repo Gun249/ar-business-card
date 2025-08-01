@@ -4,9 +4,10 @@ import { useState, useRef, useEffect } from "react"
 import { LogOut, ArrowLeft, ChevronDown, CreditCard, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import type { User } from "@/types"
 
 interface NavigationProps {
-  user: { name: string; email: string; avatar?: string }
+  user: User
   onLogout: () => void
   currentPage: string
   onNavigate: (page: any) => void
@@ -105,14 +106,14 @@ export default function Navigation({ user, onLogout, currentPage, onNavigate }: 
                 <Avatar className="w-8 h-8">
                   <AvatarImage src={user.avatar || "/placeholder.svg"} />
                   <AvatarFallback className="text-sm">
-                    {user.name
+                    {(user.name || user.username || user.email)
                       .split(" ")
-                      .map((n) => n[0])
+                      .map((n: string) => n[0])
                       .join("")
                       .toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden sm:block text-sm font-medium text-gray-700">{user.name}</span>
+                <span className="hidden sm:block text-sm font-medium text-gray-700">{user.name || user.username}</span>
                 <ChevronDown
                   className={`w-4 h-4 text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
                 />
@@ -127,15 +128,15 @@ export default function Navigation({ user, onLogout, currentPage, onNavigate }: 
                       <Avatar className="w-10 h-10">
                         <AvatarImage src={user.avatar || "/placeholder.svg"} />
                         <AvatarFallback>
-                          {user.name
+                          {(user.name || user.username || user.email)
                             .split(" ")
-                            .map((n) => n[0])
+                            .map((n: string) => n[0])
                             .join("")
                             .toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+                        <p className="text-sm font-medium text-gray-900 truncate">{user.name || user.username}</p>
                         <p className="text-xs text-gray-500 truncate">{user.email}</p>
                       </div>
                     </div>

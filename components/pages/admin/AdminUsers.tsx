@@ -1,16 +1,23 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { api } from "../../../lib/api.js"
-import LoadingSpinner from "../../ui/LoadingSpinner.jsx"
-import Modal from "../../ui/Modal.jsx"
-import UserIcon from "../../icons/UserIcon.jsx"
+import { api } from "../../../lib/api"
+import LoadingSpinner from "../../ui/LoadingSpinner"
+import Modal from "../../ui/Modal"
+import UserIcon from "../../icons/UserIcon"
+import type { User } from "@/types"
 
-export default function AdminUsers({ user, onNavigate, showToast }) {
-  const [users, setUsers] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [userToDelete, setUserToDelete] = useState(null)
+interface AdminUsersProps {
+  user: User;
+  onNavigate: (page: string) => void;
+  showToast: (message: string, type: string) => void;
+}
+
+export default function AdminUsers({ user, onNavigate, showToast }: AdminUsersProps) {
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false)
+  const [userToDelete, setUserToDelete] = useState<User | null>(null)
 
   useEffect(() => {
     loadUsers()
@@ -27,21 +34,23 @@ export default function AdminUsers({ user, onNavigate, showToast }) {
     }
   }
 
-  const handleRoleChange = async (userId, newRole) => {
+  const handleRoleChange = async (userId: string | number, newRole: string): Promise<void> => {
     try {
       await api.updateUserRole(userId, newRole)
       setUsers(users.map((u) => (u.id === userId ? { ...u, role: newRole } : u)))
-      showToast("อัปเดตสิทธิ์ผู้ใช้สำเร็จ")
+      showToast("อัปเดตสิทธิ์ผู้ใช้สำเร็จ", "success")
     } catch (error) {
       showToast("เกิดข้อผิดพลาดในการอัปเดตสิทธิ์", "error")
     }
   }
 
-  const handleDeleteUser = async () => {
+  const handleDeleteUser = async (): Promise<void> => {
+    if (!userToDelete) return
+    
     try {
       await api.deleteUser(userToDelete.id)
       setUsers(users.filter((u) => u.id !== userToDelete.id))
-      showToast("ลบผู้ใช้สำเร็จ")
+      showToast("ลบผู้ใช้สำเร็จ", "success")
       setShowDeleteModal(false)
       setUserToDelete(null)
     } catch (error) {
@@ -125,13 +134,14 @@ export default function AdminUsers({ user, onNavigate, showToast }) {
                         onChange={(e) => handleRoleChange(userData.id, e.target.value)}
                         disabled={userData.id === user.id}
                         className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                        aria-label="เลือกสิทธิ์ผู้ใช้"
                       >
                         <option value="user">ผู้ใช้</option>
                         <option value="admin">ผู้ดูแลระบบ</option>
                       </select>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(userData.createdAt).toLocaleDateString("th-TH")}
+                      {userData.createdAt ? new Date(userData.createdAt).toLocaleDateString("th-TH") : "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       {userData.id !== user.id && (

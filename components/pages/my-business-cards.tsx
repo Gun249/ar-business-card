@@ -7,25 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Eye, Edit, Trash2, Plus, Calendar, Search, Smartphone, Sparkles } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-
-interface BusinessCard {
-  id: string;
-  name: string;
-  title: string;
-  company: string;
-  email: string;
-  phone: string;
-  template: string;
-  templateId?: string;
-  createdAt: string;
-  isActive: boolean;
-  role?: string;
-  scanCount?: number;
-  frontImage?: string;
-  website?: string;
-  linkedin?: string;
-  twitter?: string;
-}
+import type { BusinessCard } from "@/types"
 
 interface MyBusinessCardsProps {
   cards: BusinessCard[]

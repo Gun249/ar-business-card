@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Smartphone, Sparkles, Volume2, Phone, Mail, Globe } from "lucide-react"
-import type { BusinessCard } from "../app/page"
+import type { BusinessCard } from "@/types"
 
 interface ARDetailsInputProps {
   businessCard: BusinessCard
@@ -249,7 +249,7 @@ export default function ARDetailsInput({ businessCard, onComplete }: ARDetailsIn
                             <span className="text-white font-bold text-sm">
                               {formData.name
                                 .split(" ")
-                                .map((n) => n[0])
+                                .map((n: string) => n[0])
                                 .join("")
                                 .toUpperCase() || "YN"}
                             </span>

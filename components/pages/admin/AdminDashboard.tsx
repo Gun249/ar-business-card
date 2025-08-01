@@ -1,22 +1,29 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { api } from "../../../lib/api.js"
-import LoadingSpinner from "../../ui/LoadingSpinner.jsx"
-import UserIcon from "../../icons/UserIcon.jsx"
-import CardIcon from "../../icons/CardIcon.jsx"
-import TemplateIcon from "../../icons/TemplateIcon.jsx"
-import StatsIcon from "../../icons/StatsIcon.jsx"
+import { api } from "../../../lib/api"
+import LoadingSpinner from "../../ui/LoadingSpinner"
+import UserIcon from "../../icons/UserIcon"
+import CardIcon from "../../icons/CardIcon"
+import TemplateIcon from "../../icons/TemplateIcon"
+import StatsIcon from "../../icons/StatsIcon"
+import type { User, Stats } from "@/types"
 
-export default function AdminDashboard({ user, onNavigate, onLogout }) {
-  const [stats, setStats] = useState(null)
-  const [loading, setLoading] = useState(true)
+interface AdminDashboardProps {
+  user: User;
+  onNavigate: (page: string) => void;
+  onLogout: () => void;
+}
+
+export default function AdminDashboard({ user, onNavigate, onLogout }: AdminDashboardProps) {
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
     loadStats()
   }, [])
 
-  const loadStats = async () => {
+  const loadStats = async (): Promise<void> => {
     try {
       const statsData = await api.getStats()
       setStats(statsData)
@@ -71,7 +78,7 @@ export default function AdminDashboard({ user, onNavigate, onLogout }) {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">ผู้ใช้ทั้งหมด</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats?.totalUsers || 0}</p>
               </div>
             </div>
           </div>
@@ -83,7 +90,7 @@ export default function AdminDashboard({ user, onNavigate, onLogout }) {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">นามบัตรทั้งหมด</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalCards}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats?.totalCards || 0}</p>
               </div>
             </div>
           </div>
@@ -95,7 +102,7 @@ export default function AdminDashboard({ user, onNavigate, onLogout }) {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">เทมเพลต</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalTemplates}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats?.totalTemplates || 0}</p>
               </div>
             </div>
           </div>
@@ -107,7 +114,7 @@ export default function AdminDashboard({ user, onNavigate, onLogout }) {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">ผู้ดูแลระบบ</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.adminUsers}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats?.adminUsers || 0}</p>
               </div>
             </div>
           </div>

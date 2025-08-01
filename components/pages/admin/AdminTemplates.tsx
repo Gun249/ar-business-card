@@ -1,24 +1,31 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { api } from "../../../lib/api.js"
-import LoadingSpinner from "../../ui/LoadingSpinner.jsx"
-import Modal from "../../ui/Modal.jsx"
+import { api } from "../../../lib/api"
+import LoadingSpinner from "../../ui/LoadingSpinner"
+import Modal from "../../ui/Modal"
+import type { User, Template, Category } from "@/types"
 
-export default function AdminTemplates({ user, onNavigate, showToast }) {
-  const [templates, setTemplates] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [templateToDelete, setTemplateToDelete] = useState(null)
-  const [newTemplate, setNewTemplate] = useState({
+interface AdminTemplatesProps {
+  user: User;
+  onNavigate: (page: string) => void;
+  showToast: (message: string, type: string) => void;
+}
+
+export default function AdminTemplates({ user, onNavigate, showToast }: AdminTemplatesProps) {
+  const [templates, setTemplates] = useState<Template[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [showCreateModal, setShowCreateModal] = useState<boolean>(false)
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false)
+  const [templateToDelete, setTemplateToDelete] = useState<Template | null>(null)
+  const [newTemplate, setNewTemplate] = useState<Omit<Template, 'id'>>({
     name: "",
     category: "popular",
     type: "vertical",
     fields: ["name", "title", "company", "phone", "email"],
   })
 
-  const categories = [
+  const categories: Category[] = [
     { id: "popular", name: "ยอดนิยม" },
     { id: "creative", name: "สร้างสรรค์" },
     { id: "modern", name: "โมเดิร์น" },
@@ -63,7 +70,7 @@ export default function AdminTemplates({ user, onNavigate, showToast }) {
         thumbnail: "/placeholder.svg?height=200&width=150",
       })
       setTemplates([...templates, createdTemplate])
-      showToast("สร้างเทมเพลตสำเร็จ")
+      showToast("สร้างเทมเพลตสำเร็จ", "success")
       setShowCreateModal(false)
       setNewTemplate({
         name: "",
@@ -76,11 +83,13 @@ export default function AdminTemplates({ user, onNavigate, showToast }) {
     }
   }
 
-  const handleDeleteTemplate = async () => {
+  const handleDeleteTemplate = async (): Promise<void> => {
+    if (!templateToDelete) return
+    
     try {
       await api.deleteTemplate(templateToDelete.id)
       setTemplates(templates.filter((t) => t.id !== templateToDelete.id))
-      showToast("ลบเทมเพลตสำเร็จ")
+      showToast("ลบเทมเพลตสำเร็จ", "success")
       setShowDeleteModal(false)
       setTemplateToDelete(null)
     } catch (error) {
@@ -88,7 +97,7 @@ export default function AdminTemplates({ user, onNavigate, showToast }) {
     }
   }
 
-  const handleFieldToggle = (fieldId) => {
+  const handleFieldToggle = (fieldId: string): void => {
     setNewTemplate((prev) => ({
       ...prev,
       fields: prev.fields.includes(fieldId) ? prev.fields.filter((f) => f !== fieldId) : [...prev.fields, fieldId],
@@ -181,6 +190,7 @@ export default function AdminTemplates({ user, onNavigate, showToast }) {
               value={newTemplate.category}
               onChange={(e) => setNewTemplate({ ...newTemplate, category: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="เลือกหมวดหมู่"
             >
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
@@ -196,6 +206,7 @@ export default function AdminTemplates({ user, onNavigate, showToast }) {
               value={newTemplate.type}
               onChange={(e) => setNewTemplate({ ...newTemplate, type: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="เลือกประเภท"
             >
               <option value="vertical">แนวตั้ง</option>
               <option value="horizontal">แนวนอน</option>

@@ -7,19 +7,20 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-import { User, Lock, Trash2, Save, Camera } from "lucide-react"
+import { User as UserIcon, Lock, Trash2, Save, Camera } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import type { User } from "@/types"
 
 interface UserProfileProps {
-  user: { id: string; name: string; email: string; avatar?: string }
-  onUpdateProfile: (user: { id: string; name: string; email: string; avatar?: string }) => void
+  user: User
+  onUpdateProfile: (user: User) => void
 }
 
 export default function UserProfile({ user, onUpdateProfile }: UserProfileProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
-    name: user.name,
-    email: user.email,
+    name: user.name || "",
+    email: user.email || "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
@@ -80,7 +81,7 @@ export default function UserProfile({ user, onUpdateProfile }: UserProfileProps)
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <User className="w-5 h-5" />
+                <UserIcon className="w-5 h-5" />
                 <span>Profile Information</span>
               </CardTitle>
             </CardHeader>
@@ -90,9 +91,9 @@ export default function UserProfile({ user, onUpdateProfile }: UserProfileProps)
                 <Avatar className="w-20 h-20">
                   <AvatarImage src={user.avatar || "/placeholder.svg"} />
                   <AvatarFallback className="text-lg">
-                    {user.name
+                    {(user.name || user.username || user.email)
                       .split(" ")
-                      .map((n) => n[0])
+                      .map((n: string) => n[0])
                       .join("")
                       .toUpperCase()}
                   </AvatarFallback>
@@ -145,8 +146,8 @@ export default function UserProfile({ user, onUpdateProfile }: UserProfileProps)
                       onClick={() => {
                         setIsEditing(false)
                         setFormData({
-                          name: user.name,
-                          email: user.email,
+                          name: user.name || "",
+                          email: user.email || "",
                           currentPassword: "",
                           newPassword: "",
                           confirmPassword: "",

@@ -9,29 +9,7 @@ import UserProfile from "@/components/pages/user-profile"
 import TemplateSelection from "@/components/pages/template-selection"
 import Navigation from "@/components/pages/navigation"
 import dynamic from 'next/dynamic';
-
-// Types
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-}
-
-interface BusinessCard {
-  id: string;
-  name: string;
-  title: string;
-  company: string;
-  email: string;
-  phone: string;
-  template: string;
-  createdAt: string;
-  isActive: boolean;
-}
-
-type PageType = "landing" | "login" | "register" | "templates" | "my-cards" | "profile" | "ar-viewer";
-type ToastType = "success" | "error" | "info" | "warning";
+import type { User, BusinessCard, PageType, ToastType } from "@/types"
 
 const ARCardViewer = dynamic(
   () => import('@/components/pages/ARViewerPage'),

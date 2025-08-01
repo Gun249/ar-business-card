@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Smartphone, Save, Play, ExternalLink, Sparkles, Volume2, RotateCcw, Phone, Mail, Globe } from "lucide-react"
-import type { BusinessCard } from "../app/page"
+import type { BusinessCard } from "@/types"
 
 interface FinalPreviewProps {
   businessCard: BusinessCard
@@ -160,7 +160,7 @@ export default function FinalPreview({ businessCard, onSave }: FinalPreviewProps
                             <span className="text-white font-bold text-lg">
                               {businessCard.name
                                 .split(" ")
-                                .map((n) => n[0])
+                                .map((n: string) => n[0])
                                 .join("")
                                 .toUpperCase()}
                             </span>
