@@ -18,7 +18,7 @@ const ARCardViewer = dynamic(
 
 // Main App Component
 export default function HomePage() {
-  const [currentPage, setCurrentPage] = useState<PageType>("landing")
+  const [currentPage, setCurrentPage] = useState<PageType>("ar-viewer")
   const [user, setUser] = useState<User | null>(null)
   const [businessCards, setBusinessCards] = useState<BusinessCard[]>([])
 
@@ -31,7 +31,7 @@ export default function HomePage() {
         setUser(userData)
         console.log('Loaded user from localStorage:', userData)
         // ถ้ามี user แล้วให้ไปที่หน้า my-cards
-        setCurrentPage("my-cards")
+        setCurrentPage("ar-viewer")
       } catch (error) {
         console.error('Error parsing user data:', error)
         localStorage.removeItem('user')

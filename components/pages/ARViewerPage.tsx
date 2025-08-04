@@ -64,6 +64,96 @@ const ARViewerPage: React.FC<ARViewerPageProps> = ({ cardData: initialCardData }
       return;
     }
 
+    // Hide address bar on mobile devices
+    const hideAddressBar = () => {
+      if (window.innerHeight < window.outerHeight) {
+        window.scrollTo(0, 1);
+      }
+    };
+
+    // Force fullscreen on mobile
+    const forceFullscreen = () => {
+      const element = document.documentElement;
+      if (element.requestFullscreen) {
+        element.requestFullscreen().catch(() => {
+          // Fallback for mobile browsers that don't support fullscreen
+          console.log('Fullscreen not supported, using mobile viewport workaround');
+        });
+      }
+    };
+
+    // Mobile specific initialization
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      setTimeout(hideAddressBar, 1000);
+      window.addEventListener('orientationchange', hideAddressBar);
+      
+      // Force hide address bar and enable fullscreen mode
+      const enableFullscreenMode = () => {
+        // Hide address bar
+        hideAddressBar();
+        
+        // Force body and html to be fullscreen
+        document.documentElement.style.cssText = `
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          height: -webkit-fill-available !important;
+          overflow: hidden !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        `;
+        
+        document.body.style.cssText = `
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          height: -webkit-fill-available !important;
+          overflow: hidden !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        `;
+
+        // Force Next.js root container
+        const nextRoot = document.getElementById('__next');
+        if (nextRoot) {
+          nextRoot.style.cssText = `
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            height: -webkit-fill-available !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          `;
+        }
+        
+        // Try to enter fullscreen
+        forceFullscreen();
+      };
+      
+      // Enable fullscreen on touch
+      const handleTouch = () => {
+        enableFullscreenMode();
+        document.removeEventListener('touchstart', handleTouch);
+      };
+      document.addEventListener('touchstart', handleTouch, { once: true });
+      
+      // Also enable on load
+      setTimeout(enableFullscreenMode, 2000);
+    }
+
     const loadScript = (src: string, id: string): Promise<void> => {
       return new Promise((resolve, reject) => {
         const script = document.createElement('script');
@@ -89,6 +179,13 @@ const ARViewerPage: React.FC<ARViewerPageProps> = ({ cardData: initialCardData }
     };
 
     initializeAR();
+
+    // Cleanup function
+    return () => {
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        window.removeEventListener('orientationchange', hideAddressBar);
+      }
+    };
   }, []);
 
   // Effect to build the A-Frame scene and manage page styles.
@@ -104,6 +201,77 @@ const ARViewerPage: React.FC<ARViewerPageProps> = ({ cardData: initialCardData }
       html, body {
         background: transparent !important;
         background-color: transparent !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+      }
+      
+      #__next {
+        width: 100% !important;
+        height: 100% !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+      }
+
+      /* Mobile specific styles */
+      @media screen and (max-width: 768px) {
+        html, body {
+          height: -webkit-fill-available !important;
+          height: 100vh !important;
+          width: 100vw !important;
+          position: fixed !important;
+          overflow: hidden !important;
+        }
+        
+        /* Hide browser UI */
+        body {
+          -webkit-touch-callout: none;
+          -webkit-user-select: none;
+          -khtml-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+        }
+      }
+      
+      /* A-Frame specific styles */
+      a-scene {
+        width: 100vw !important;
+        height: 100vh !important;
+        height: -webkit-fill-available !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        z-index: 10000 !important;
+      }
+
+      /* Force canvas to be fullscreen */
+      a-scene canvas {
+        width: 100vw !important;
+        height: 100vh !important;
+        height: -webkit-fill-available !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+      }
+
+      /* Hide MindAR UI elements that might cause layout issues */
+      .mindar-ui-overlay {
+        z-index: 10001 !important;
       }
     `;
     document.head.appendChild(styleElement);
@@ -113,11 +281,22 @@ const ARViewerPage: React.FC<ARViewerPageProps> = ({ cardData: initialCardData }
 
     // Build the scene HTML string using the business card data.
     const sceneHTML = `
-      <a-scene mindar-image="imageTargetSrc: mind/targets.mind; autoStart: true; uiLoading: yes; uiScanning: yes; uiError: yes;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" embedded>
+      <a-scene 
+        mindar-image="imageTargetSrc: mind/targets.mind; autoStart: true; uiLoading: yes; uiScanning: yes; uiError: yes;" 
+        color-space="sRGB" 
+        renderer="colorManagement: true, physicallyCorrectLights, antialias: true, alpha: true, preserveDrawingBuffer: true" 
+        vr-mode-ui="enabled: false" 
+        device-orientation-permission-ui="enabled: false" 
+        embedded
+        style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 10000 !important;">
           <a-assets>
               <img id="profilePic" src="${cardData.profilePicture}" crossorigin="anonymous" />
           </a-assets>
-          <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+          <a-camera 
+            position="0 0 0" 
+            look-controls="enabled: false"
+            camera="fov: 60; aspect: ${window.innerWidth / window.innerHeight}; near: 0.1; far: 1000">
+          </a-camera>
           <a-entity mindar-image-target="targetIndex: 0">
               
               <!-- Business Card Background -->
@@ -143,7 +322,116 @@ const ARViewerPage: React.FC<ARViewerPageProps> = ({ cardData: initialCardData }
     container.innerHTML = sceneHTML;
     const sceneEl = container.querySelector('a-scene') as AFrameScene | null;
 
+    // Force immediate camera setup
+    if (sceneEl) {
+      // Wait for MindAR to initialize then force fullscreen
+      setTimeout(() => {
+        const video = document.querySelector('video');
+        if (video) {
+          video.style.cssText = `
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            height: -webkit-fill-available !important;
+            object-fit: cover !important;
+            z-index: 1 !important;
+          `;
+        }
+
+        // Force MindAR container
+        const mindarContainer = document.querySelector('.mindar-ui-overlay') || 
+                              document.querySelector('[class*="mindar"]') ||
+                              sceneEl;
+        
+        if (mindarContainer && mindarContainer !== sceneEl) {
+          (mindarContainer as HTMLElement).style.cssText = `
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            height: -webkit-fill-available !important;
+            z-index: 10001 !important;
+          `;
+        }
+      }, 2000);
+    }
+
     const onReady = (): void => {
+        // Force fullscreen styles after A-Frame loads
+        setTimeout(() => {
+          const scene = container?.querySelector('a-scene');
+          const canvas = scene?.querySelector('canvas');
+          const renderer = (scene as any)?.renderer3D;
+          
+          if (scene) {
+            scene.setAttribute('style', `
+              position: fixed !important;
+              top: 0 !important;
+              left: 0 !important;
+              right: 0 !important;
+              bottom: 0 !important;
+              width: 100vw !important;
+              height: 100vh !important;
+              height: -webkit-fill-available !important;
+              z-index: 10000 !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            `);
+          }
+          
+          if (canvas) {
+            canvas.setAttribute('style', `
+              position: fixed !important;
+              top: 0 !important;
+              left: 0 !important;
+              right: 0 !important;
+              bottom: 0 !important;
+              width: 100vw !important;
+              height: 100vh !important;
+              height: -webkit-fill-available !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              z-index: 10000 !important;
+            `);
+            
+            // Force canvas dimensions
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+          }
+
+          // Force Three.js renderer to resize
+          if (renderer) {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+          }
+
+          // Listen for window resize
+          const handleResize = () => {
+            if (canvas) {
+              canvas.width = window.innerWidth;
+              canvas.height = window.innerHeight;
+              canvas.style.width = window.innerWidth + 'px';
+              canvas.style.height = window.innerHeight + 'px';
+            }
+            if (renderer) {
+              renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+          };
+          
+          window.addEventListener('resize', handleResize);
+          window.addEventListener('orientationchange', handleResize);
+          
+        }, 1000);
+
         toast("AR พร้อมใช้งานแล้ว! กรุณาเล็งกล้องไปที่ Marker", {
             icon: <CheckIcon />,
             duration: 5000,
@@ -162,6 +450,12 @@ const ARViewerPage: React.FC<ARViewerPageProps> = ({ cardData: initialCardData }
       if (styleTag) {
         styleTag.remove();
       }
+      
+      // Remove resize listeners
+      const handleResize = () => {}; // Placeholder to match the function signature
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+      
       const currentSceneEl = containerRef.current?.querySelector('a-scene') as AFrameScene | null;
       if (currentSceneEl) {
         currentSceneEl.removeEventListener('loaded', onReady);
@@ -177,7 +471,7 @@ const ARViewerPage: React.FC<ARViewerPageProps> = ({ cardData: initialCardData }
 
   // Render UI based on the current status
   return (
-    <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999 }}>
+    <div className="fixed inset-0 w-screen h-screen z-[9999] overflow-hidden">
       {status === 'loading' && (
         <div className="flex flex-col justify-center items-center h-full bg-gray-900 bg-opacity-80">
           <LoadingSpinner />
@@ -194,7 +488,10 @@ const ARViewerPage: React.FC<ARViewerPageProps> = ({ cardData: initialCardData }
           </Button>
         </div>
       )}
-      <div ref={containerRef} style={{ width: '100%', height: '100%', display: status === 'ready' ? 'block' : 'none' }} />
+      <div 
+        ref={containerRef} 
+        className={`w-full h-full ${status === 'ready' ? 'block' : 'hidden'}`}
+      />
     </div>
   );
 };
