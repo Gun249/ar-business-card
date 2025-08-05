@@ -71,87 +71,17 @@ const ARViewerPage: React.FC<ARViewerPageProps> = ({ cardData: initialCardData }
       }
     };
 
-    // Force fullscreen on mobile
-    const forceFullscreen = () => {
-      const element = document.documentElement;
-      if (element.requestFullscreen) {
-        element.requestFullscreen().catch(() => {
-          // Fallback for mobile browsers that don't support fullscreen
-          console.log('Fullscreen not supported, using mobile viewport workaround');
-        });
-      }
-    };
-
     // Mobile specific initialization
     if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      // Basic mobile setup without forcing fullscreen
+      const hideAddressBar = () => {
+        if (window.innerHeight < window.outerHeight) {
+          window.scrollTo(0, 1);
+        }
+      };
+      
       setTimeout(hideAddressBar, 1000);
       window.addEventListener('orientationchange', hideAddressBar);
-      
-      // Force hide address bar and enable fullscreen mode
-      const enableFullscreenMode = () => {
-        // Hide address bar
-        hideAddressBar();
-        
-        // Force body and html to be fullscreen
-        document.documentElement.style.cssText = `
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          right: 0 !important;
-          bottom: 0 !important;
-          width: 100vw !important;
-          height: 100vh !important;
-          height: -webkit-fill-available !important;
-          overflow: hidden !important;
-          margin: 0 !important;
-          padding: 0 !important;
-        `;
-        
-        document.body.style.cssText = `
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          right: 0 !important;
-          bottom: 0 !important;
-          width: 100vw !important;
-          height: 100vh !important;
-          height: -webkit-fill-available !important;
-          overflow: hidden !important;
-          margin: 0 !important;
-          padding: 0 !important;
-        `;
-
-        // Force Next.js root container
-        const nextRoot = document.getElementById('__next');
-        if (nextRoot) {
-          nextRoot.style.cssText = `
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            height: -webkit-fill-available !important;
-            overflow: hidden !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          `;
-        }
-        
-        // Try to enter fullscreen
-        forceFullscreen();
-      };
-      
-      // Enable fullscreen on touch
-      const handleTouch = () => {
-        enableFullscreenMode();
-        document.removeEventListener('touchstart', handleTouch);
-      };
-      document.addEventListener('touchstart', handleTouch, { once: true });
-      
-      // Also enable on load
-      setTimeout(enableFullscreenMode, 2000);
     }
 
     const loadScript = (src: string, id: string): Promise<void> => {
@@ -183,98 +113,21 @@ const ARViewerPage: React.FC<ARViewerPageProps> = ({ cardData: initialCardData }
     // Cleanup function
     return () => {
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        const hideAddressBar = () => {
+          if (window.innerHeight < window.outerHeight) {
+            window.scrollTo(0, 1);
+          }
+        };
         window.removeEventListener('orientationchange', hideAddressBar);
       }
     };
   }, []);
 
-  // Effect to build the A-Frame scene and manage page styles.
+  // Effect to build the A-Frame scene.
   useEffect(() => {
     if (status !== 'ready') {
       return;
     }
-    
-    const styleId = "ar-viewer-style-override";
-    const styleElement = document.createElement('style');
-    styleElement.id = styleId;
-    styleElement.innerHTML = `
-      html, body {
-        background: transparent !important;
-        background-color: transparent !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        overflow: hidden !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-      }
-      
-      #__next {
-        width: 100% !important;
-        height: 100% !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-      }
-
-      /* Mobile specific styles */
-      @media screen and (max-width: 768px) {
-        html, body {
-          height: -webkit-fill-available !important;
-          height: 100vh !important;
-          width: 100vw !important;
-          position: fixed !important;
-          overflow: hidden !important;
-        }
-        
-        /* Hide browser UI */
-        body {
-          -webkit-touch-callout: none;
-          -webkit-user-select: none;
-          -khtml-user-select: none;
-          -moz-user-select: none;
-          -ms-user-select: none;
-          user-select: none;
-        }
-      }
-      
-      /* A-Frame specific styles */
-      a-scene {
-        width: 100vw !important;
-        height: 100vh !important;
-        height: -webkit-fill-available !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        z-index: 10000 !important;
-      }
-
-      /* Force canvas to be fullscreen */
-      a-scene canvas {
-        width: 100vw !important;
-        height: 100vh !important;
-        height: -webkit-fill-available !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-      }
-
-      /* Hide MindAR UI elements that might cause layout issues */
-      .mindar-ui-overlay {
-        z-index: 10001 !important;
-      }
-    `;
-    document.head.appendChild(styleElement);
 
     const container = containerRef.current;
     if (!container) return;
@@ -287,8 +140,7 @@ const ARViewerPage: React.FC<ARViewerPageProps> = ({ cardData: initialCardData }
         renderer="colorManagement: true, physicallyCorrectLights, antialias: true, alpha: true, preserveDrawingBuffer: true" 
         vr-mode-ui="enabled: false" 
         device-orientation-permission-ui="enabled: false" 
-        embedded
-        style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 10000 !important;">
+        embedded>
           <a-assets>
               <img id="profilePic" src="${cardData.profilePicture}" crossorigin="anonymous" />
           </a-assets>
@@ -299,21 +151,127 @@ const ARViewerPage: React.FC<ARViewerPageProps> = ({ cardData: initialCardData }
           </a-camera>
           <a-entity mindar-image-target="targetIndex: 0">
               
-              <!-- Business Card Background -->
-              <a-plane color="#FFF" opacity="0.9" position="0 0 0" height="0.552" width="1" rotation="0 0 0"></a-plane>
+              <!-- Base Card (Center) -->
+              <a-plane color="#FFFFFF" opacity="0.95" position="0 0 0" height="0.55" width="1" rotation="0 0 0">
+                <!-- Card Border -->
+                <a-plane color="none" geometry="primitive: plane; width: 1.05; height: 0.58" 
+                         position="0 0 -0.001" 
+                         material="shader: standard; transparent: true; opacity: 0.3; color: #007BFF">
+                </a-plane>
+              </a-plane>
 
-              <!-- Profile Picture (as a circle) -->
-              <a-circle src="#profilePic" radius="0.15" position="-0.3 0 0.01"></a-circle>
+              <!-- Profile Picture (Center Left of Card) -->
+              <a-entity position="-0.25 0 0.01">
+                <a-circle src="#profilePic" radius="0.15" position="0 0 0">
+                  <!-- Profile Border Animation -->
+                  <a-ring color="#007BFF" radius-inner="0.16" radius-outer="0.17" position="0 0 -0.001" opacity="0.8"
+                          animation="property: rotation; to: 0 0 360; dur: 8000; loop: true"></a-ring>
+                </a-circle>
+              </a-entity>
 
-              <!-- Text Information -->
-              <a-text value="${cardData.username}" color="#000" align="left" width="2" position="-0.05 0.18 0.01" font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"></a-text>
-              <a-text value="${cardData.title}" color="#555" align="left" width="1.5" position="-0.05 0.10 0.01" font="https://cdn.aframe.io/fonts/Exo2SemiBold.fnt"></a-text>
+              <!-- Name on Card (Right of Profile) -->
+              <a-text value="${cardData.username}" color="#333" align="left" width="3" position="0.05 0.1 0.01" 
+                      font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"></a-text>
+
+              <!-- Floating Information Panels Around Card -->
               
-              <!-- Line Separator -->
-              <a-plane color="#BBB" height="0.01" width="0.45" position="0.175 0.04 0.01"></a-plane>
+              <!-- Job Title Panel (Above Card) -->
+              <a-entity position="0 0.45 0.02" 
+                        animation="property: position; to: 0 0.5 0.02; dur: 2000; loop: true; dir: alternate; easing: easeInOutSine">
+                <a-plane color="#4A90E2" opacity="0.9" position="0 0 0" height="0.12" width="0.6" rotation="0 0 0">
+                  <a-text value="ตำแหน่ง" color="#FFF" align="center" width="3" position="0 0.03 0.001" 
+                          font="https://cdn.aframe.io/fonts/Exo2SemiBold.fnt"></a-text>
+                  <a-text value="${cardData.title}" color="#FFF" align="center" width="2.5" position="0 -0.025 0.001" 
+                          font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"></a-text>
+                </a-plane>
+                <!-- Title Icon -->
+                <a-circle color="#FFF" radius="0.04" position="0 0.08 0.001">
+                  <a-text value="💼" color="#4A90E2" align="center" width="6" position="0 0 0.001"></a-text>
+                </a-circle>
+              </a-entity>
 
-              <a-text value="Tel: ${cardData.phone}" color="#007BFF" align="left" width="1.5" position="-0.05 -0.05 0.01"></a-text>
-              <a-text value="${cardData.email}" color="#007BFF" align="left" width="1.5" position="-0.05 -0.15 0.01"></a-text>
+              <!-- Phone Panel (Right Side) -->
+              <a-entity position="0.7 0.1 0.03" 
+                        animation="property: position; to: 0.75 0.1 0.03; dur: 2500; loop: true; dir: alternate; easing: easeInOutSine; delay: 500">
+                <a-plane color="#50C878" opacity="0.9" position="0 0 0" height="0.15" width="0.45" rotation="0 0 0">
+                  <a-text value="โทรศัพท์" color="#FFF" align="center" width="3" position="0 0.04 0.001" 
+                          font="https://cdn.aframe.io/fonts/Exo2SemiBold.fnt"></a-text>
+                  <a-text value="${cardData.phone}" color="#FFF" align="center" width="2.2" position="0 -0.02 0.001" 
+                          font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"></a-text>
+                </a-plane>
+                <!-- Phone Icon with animation -->
+                <a-circle color="#FFF" radius="0.04" position="0 0.1 0.001"
+                          animation="property: rotation; to: 0 0 360; dur: 3000; loop: true">
+                  <a-text value="📞" color="#50C878" align="center" width="6" position="0 0 0.001"></a-text>
+                </a-circle>
+                <!-- Connecting line to card -->
+                <a-cylinder color="#50C878" radius="0.003" height="0.35" position="-0.15 0 0.01" 
+                           rotation="0 0 -20" opacity="0.6"
+                           animation="property: material.opacity; to: 1; dur: 1500; loop: true; dir: alternate"></a-cylinder>
+              </a-entity>
+
+              <!-- Email Panel (Left Side) -->
+              <a-entity position="-0.7 -0.1 0.04" 
+                        animation="property: position; to: -0.75 -0.1 0.04; dur: 2300; loop: true; dir: alternate; easing: easeInOutSine; delay: 1000">
+                <a-plane color="#FF6B6B" opacity="0.9" position="0 0 0" height="0.15" width="0.5" rotation="0 0 0">
+                  <a-text value="อีเมล" color="#FFF" align="center" width="3" position="0 0.04 0.001" 
+                          font="https://cdn.aframe.io/fonts/Exo2SemiBold.fnt"></a-text>
+                  <a-text value="${cardData.email}" color="#FFF" align="center" width="2" position="0 -0.02 0.001" 
+                          font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"></a-text>
+                </a-plane>
+                <!-- Email Icon with pulse animation -->
+                <a-circle color="#FFF" radius="0.04" position="0 0.1 0.001"
+                          animation="property: scale; to: 1.2 1.2 1.2; dur: 1500; loop: true; dir: alternate">
+                  <a-text value="✉️" color="#FF6B6B" align="center" width="6" position="0 0 0.001"></a-text>
+                </a-circle>
+                <!-- Connecting line to card -->
+                <a-cylinder color="#FF6B6B" radius="0.003" height="0.4" position="0.15 0.05 0.01" 
+                           rotation="0 0 25" opacity="0.6"
+                           animation="property: material.opacity; to: 1; dur: 1800; loop: true; dir: alternate; delay: 300"></a-cylinder>
+              </a-entity>
+
+              <!-- Contact Info Panel (Bottom) -->
+              <a-entity position="0 -0.45 0.05" 
+                        animation="property: position; to: 0 -0.5 0.05; dur: 2800; loop: true; dir: alternate; easing: easeInOutSine; delay: 1500">
+                <a-plane color="#9B59B6" opacity="0.9" position="0 0 0" height="0.12" width="0.8" rotation="0 0 0">
+                  <a-text value="ติดต่อเพิ่มเติม" color="#FFF" align="center" width="3" position="0 0.03 0.001" 
+                          font="https://cdn.aframe.io/fonts/Exo2SemiBold.fnt"></a-text>
+                  <a-text value="สแกน QR Code หรือแตะเพื่อบันทึก" color="#FFF" align="center" width="2.5" position="0 -0.025 0.001" 
+                          font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"></a-text>
+                </a-plane>
+                <!-- QR Icon -->
+                <a-circle color="#FFF" radius="0.04" position="0 0.08 0.001">
+                  <a-text value="📱" color="#9B59B6" align="center" width="6" position="0 0 0.001"></a-text>
+                </a-circle>
+              </a-entity>
+
+              <!-- Decorative Floating Elements -->
+              
+              <!-- Animated Particles around the card -->
+              <a-entity position="0.5 0.3 0.1">
+                <a-sphere color="#4A90E2" radius="0.008" opacity="0.7"
+                          animation="property: position; to: 0.6 0.4 0.15; dur: 4000; loop: true; dir: alternate; easing: easeInOutSine"></a-sphere>
+              </a-entity>
+              <a-entity position="-0.5 0.3 0.1">
+                <a-sphere color="#50C878" radius="0.006" opacity="0.6"
+                          animation="property: position; to: -0.6 0.4 0.12; dur: 3500; loop: true; dir: alternate; easing: easeInOutSine; delay: 1000"></a-sphere>
+              </a-entity>
+              <a-entity position="0.4 -0.3 0.08">
+                <a-sphere color="#FF6B6B" radius="0.007" opacity="0.5"
+                          animation="property: position; to: 0.5 -0.4 0.13; dur: 3800; loop: true; dir: alternate; easing: easeInOutSine; delay: 500"></a-sphere>
+              </a-entity>
+              <a-entity position="-0.4 -0.3 0.09">
+                <a-sphere color="#9B59B6" radius="0.005" opacity="0.4"
+                          animation="property: position; to: -0.5 -0.4 0.14; dur: 4200; loop: true; dir: alternate; easing: easeInOutSine; delay: 1200"></a-sphere>
+              </a-entity>
+
+              <!-- Orbit Ring Animation -->
+              <a-entity position="0 0 0.01">
+                <a-ring color="#007BFF" radius-inner="0.6" radius-outer="0.61" position="0 0 0" opacity="0.3"
+                        animation="property: rotation; to: 0 0 360; dur: 15000; loop: true"></a-ring>
+                <a-ring color="#4A90E2" radius-inner="0.65" radius-outer="0.66" position="0 0 0.001" opacity="0.2"
+                        animation="property: rotation; to: 0 0 -360; dur: 20000; loop: true"></a-ring>
+              </a-entity>
 
           </a-entity>
       </a-scene>
@@ -322,116 +280,7 @@ const ARViewerPage: React.FC<ARViewerPageProps> = ({ cardData: initialCardData }
     container.innerHTML = sceneHTML;
     const sceneEl = container.querySelector('a-scene') as AFrameScene | null;
 
-    // Force immediate camera setup
-    if (sceneEl) {
-      // Wait for MindAR to initialize then force fullscreen
-      setTimeout(() => {
-        const video = document.querySelector('video');
-        if (video) {
-          video.style.cssText = `
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            height: -webkit-fill-available !important;
-            object-fit: cover !important;
-            z-index: 1 !important;
-          `;
-        }
-
-        // Force MindAR container
-        const mindarContainer = document.querySelector('.mindar-ui-overlay') || 
-                              document.querySelector('[class*="mindar"]') ||
-                              sceneEl;
-        
-        if (mindarContainer && mindarContainer !== sceneEl) {
-          (mindarContainer as HTMLElement).style.cssText = `
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            height: -webkit-fill-available !important;
-            z-index: 10001 !important;
-          `;
-        }
-      }, 2000);
-    }
-
     const onReady = (): void => {
-        // Force fullscreen styles after A-Frame loads
-        setTimeout(() => {
-          const scene = container?.querySelector('a-scene');
-          const canvas = scene?.querySelector('canvas');
-          const renderer = (scene as any)?.renderer3D;
-          
-          if (scene) {
-            scene.setAttribute('style', `
-              position: fixed !important;
-              top: 0 !important;
-              left: 0 !important;
-              right: 0 !important;
-              bottom: 0 !important;
-              width: 100vw !important;
-              height: 100vh !important;
-              height: -webkit-fill-available !important;
-              z-index: 10000 !important;
-              margin: 0 !important;
-              padding: 0 !important;
-            `);
-          }
-          
-          if (canvas) {
-            canvas.setAttribute('style', `
-              position: fixed !important;
-              top: 0 !important;
-              left: 0 !important;
-              right: 0 !important;
-              bottom: 0 !important;
-              width: 100vw !important;
-              height: 100vh !important;
-              height: -webkit-fill-available !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              z-index: 10000 !important;
-            `);
-            
-            // Force canvas dimensions
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            canvas.style.width = window.innerWidth + 'px';
-            canvas.style.height = window.innerHeight + 'px';
-          }
-
-          // Force Three.js renderer to resize
-          if (renderer) {
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-          }
-
-          // Listen for window resize
-          const handleResize = () => {
-            if (canvas) {
-              canvas.width = window.innerWidth;
-              canvas.height = window.innerHeight;
-              canvas.style.width = window.innerWidth + 'px';
-              canvas.style.height = window.innerHeight + 'px';
-            }
-            if (renderer) {
-              renderer.setSize(window.innerWidth, window.innerHeight);
-            }
-          };
-          
-          window.addEventListener('resize', handleResize);
-          window.addEventListener('orientationchange', handleResize);
-          
-        }, 1000);
-
         toast("AR พร้อมใช้งานแล้ว! กรุณาเล็งกล้องไปที่ Marker", {
             icon: <CheckIcon />,
             duration: 5000,
@@ -446,16 +295,6 @@ const ARViewerPage: React.FC<ARViewerPageProps> = ({ cardData: initialCardData }
 
     // Cleanup function
     return () => {
-      const styleTag = document.getElementById(styleId);
-      if (styleTag) {
-        styleTag.remove();
-      }
-      
-      // Remove resize listeners
-      const handleResize = () => {}; // Placeholder to match the function signature
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', handleResize);
-      
       const currentSceneEl = containerRef.current?.querySelector('a-scene') as AFrameScene | null;
       if (currentSceneEl) {
         currentSceneEl.removeEventListener('loaded', onReady);
