@@ -1,24 +1,24 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import RegisterPage from "@/components/pages/RegisterPage"
-import LoginPage from "@/components/pages/LoginPage"
+import RegisterPage from "@/components/features/auth/RegisterPage"
+import LoginPage from "@/components/features/auth/LoginPage"
 import LandingPage from "@/components/pages/landing-page"
 import MyBusinessCards from "@/components/pages/my-business-cards"
 import UserProfile from "@/components/pages/user-profile"
-import TemplateSelection from "@/components/pages/template-selection"
+import TemplateSelection from "@/components/features/ar-templates/TemplateSelection"
 import Navigation from "@/components/pages/navigation"
 import dynamic from 'next/dynamic';
 import type { User, BusinessCard, PageType, ToastType } from "@/types"
 
 const ARCardViewer = dynamic(
-  () => import('@/components/pages/ARViewerPage'),
+  () => import('@/components/features/ar-viewer/ARViewerPage'),
   { ssr: false } // <-- คำสั่งสำคัญ! คือการบอกว่า "ไม่ต้องทำ Server-Side Rendering"
 );
 
 // Main App Component
 export default function HomePage() {
-  const [currentPage, setCurrentPage] = useState<PageType>("ar-viewer")
+  const [currentPage, setCurrentPage] = useState<PageType>("landing")
   const [user, setUser] = useState<User | null>(null)
   const [businessCards, setBusinessCards] = useState<BusinessCard[]>([])
 
@@ -31,7 +31,7 @@ export default function HomePage() {
         setUser(userData)
         console.log('Loaded user from localStorage:', userData)
         // ถ้ามี user แล้วให้ไปที่หน้า my-cards
-        setCurrentPage("ar-viewer")
+        setCurrentPage("my-cards")
       } catch (error) {
         console.error('Error parsing user data:', error)
         localStorage.removeItem('user')

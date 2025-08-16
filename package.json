@@ -7,7 +7,7 @@
     "dev": "next dev --turbo",
     "lint": "next lint",
     "start": "next start",
-    "backend": "nodemon --exec tsx index.ts",
+    "backend": "nodemon --exec tsx server.ts",
     "dev:full": "concurrently \"npm run backend\" \"npm run dev\""
   },
   "dependencies": {
